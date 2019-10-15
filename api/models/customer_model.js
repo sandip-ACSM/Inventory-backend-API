@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
-const supplierSchema = mongoose.Schema({
+const customerSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
-    supplier_name: { type: String, required: true },
+    customer_name: { type: String, required: true },
     address: { type: String },
     zipcode: { type: Number },
     city: { type: String },
@@ -12,4 +12,4 @@ const supplierSchema = mongoose.Schema({
     fax: { type: String }
 });
 
-module.exports = mongoose.model('supplier', supplierSchema);
+module.exports = mongoose.model('customer', customerSchema);

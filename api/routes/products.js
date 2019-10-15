@@ -13,7 +13,12 @@ var http_error_500 = err => {
 
 var addElement_obj = (query_obj, query_str_key, query_str_value) => {
     if (query_str_value) {
-        query_obj[query_str_key] = query_str_value
+        if (typeof query_str_value == "string") {
+            // For case insensitive search in case of string
+            query_obj[query_str_key] = {$regex:"^"+query_str_value+"$", $options:"i"}
+        } else {
+            query_obj[query_str_key] = query_str_value
+        }
     } 
     return query_obj
 }
@@ -75,14 +80,14 @@ router.get("/", (req, res, next) => {
 router.post("/", (req, res, next) => {
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
-        product_code: doc.product_code,
-        name: doc.name,
-        category: doc.category,
-        description: doc.description,
-        supplier: doc.supplier,
-        u_sell: doc.u_sell,
-        u_buy: doc.u_buy,
-        u_measure: doc.u_measure,
+        product_code: req.body.product_code,
+        name: req.body.name,
+        category: req.body.category,
+        description: req.body.description,
+        supplier: req.body.supplier,
+        u_sell: req.body.u_sell,
+        u_buy: req.body.u_buy,
+        u_measure: req.body.u_measure,
     });
     product
         .save()
@@ -91,9 +96,15 @@ router.post("/", (req, res, next) => {
             res.status(201).json({
                 message: "Created product successfully",
                 createdProduct: {
-                    name: result.name,
-                    price: result.price,
                     _id: result._id,
+                    product_code: result.product_code,
+                    name: result.name,
+                    category: result.category,
+                    description: result.description,
+                    supplier: result.supplier,
+                    u_sell: result.u_sell,
+                    u_buy: result.u_buy,
+                    u_measure: result.u_measure,
                 }
             });
         })

@@ -7,8 +7,7 @@ const mongoose = require("mongoose");
 
 const productRoutes = require('./api/routes/products');
 const supplierRoutes = require('./api/routes/suppliers');
-const logsRoutes = require('./api/routes/logs');
-const inventoryRoutes = require('./api/routes/inventory');
+const customerRoutes = require('./api/routes/customers');
 
 
 mongoose.connect('mongodb://127.0.0.1/inventory-api-db',
@@ -25,8 +24,8 @@ app.use(bodyParser.json());
 
 app.use('/products', productRoutes);
 app.use('/suppliers', supplierRoutes);
-app.use('/logs', logsRoutes);
-app.use('/inventory', inventoryRoutes);
+app.use('/customers', customerRoutes);
+
 
 app.use((req, res, next) => {
     const error = new Error("Not found");

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 
-const Supplier = require("../models/supplier_model.js");
+const Customer = require("../models/customer_model.js");
 
 var http_error_500 = err => {
     console.log(err);
@@ -25,27 +25,27 @@ var addElement_obj = (query_obj, query_str_key, query_str_value) => {
 
 router.get("/", (req, res, next) => {
     if (Object.keys(req.query).length === 0){
-        var supplier_res = Supplier.find()
+        var customer_res = Customer.find()
     } else {
         var query_obj = {}
-        query_obj = addElement_obj(query_obj, 'supplier_name', req.query.supplier_name)
+        query_obj = addElement_obj(query_obj, 'customer_name', req.query.customer_name)
         query_obj = addElement_obj(query_obj, 'city', req.query.city)
         query_obj = addElement_obj(query_obj, 'email', req.query.email)
-        var supplier_res = Supplier.find(query_obj)
+        var customer_res = Customer.find(query_obj)
     }
-    supplier_res
+    customer_res
         .exec()
         .then(docs => {
             const response = {
                 count: docs.length,
-                suppliers: docs.map(doc => {
+                customers: docs.map(doc => {
                     return {
                         _id: doc._id,
-                        supplier_code: doc.supplier_code,
-                        supplier_name: doc.supplier_name,
+                        customer_code: doc.customer_code,
+                        customer_name: doc.customer_name,
                         city: doc.city,
                         description: doc.description,
-                        supplier: doc.supplier,
+                        customer: doc.customer,
                         u_sell: doc.u_sell,
                         u_buy: doc.u_buy,
                         u_measure: doc.u_measure,
@@ -57,11 +57,10 @@ router.get("/", (req, res, next) => {
         .catch(http_error_500);
 });
 
-
 router.post("/", (req, res, next) => {
-    const supplier = new supplier({
+    const customer = new customer({
         _id: new mongoose.Types.ObjectId(),
-        supplier_name: req.body.supplier_name,
+        customer_name: req.body.customer_name,
         address: req.body.address,
         zipcode: req.body.zipcode,
         city: req.body.city,
@@ -70,15 +69,15 @@ router.post("/", (req, res, next) => {
         email: req.body.email,
         fax: req.body.fax,
     });
-    supplier
+    customer
         .save()
         .then(result => {
             console.log(result);
             res.status(201).json({
-                message: "Created supplier successfully",
-                createdsupplier: {
+                message: "Created customer successfully",
+                createdcustomer: {
                     _id: result._id,
-                    supplier_name: result.supplier_name,
+                    customer_name: result.customer_name,
                     address: result.address,
                     zipcode: result.zipcode,
                     city: result.city,
@@ -93,15 +92,15 @@ router.post("/", (req, res, next) => {
 });
 
 
-router.get("/:supplierId", (req, res, next) => {
-    const id = req.params.supplierId;
-    Supplier.findById(id)
+router.get("/:customerId", (req, res, next) => {
+    const id = req.params.customerId;
+    Customer.findById(id)
         .exec()
         .then(doc => {
             console.log("From database", doc);
             if (doc) {
                 res.status(200).json({
-                    supplier: doc,
+                    customer: doc,
                 });
             } else {
                 res.status(404).json({ 
@@ -112,31 +111,29 @@ router.get("/:supplierId", (req, res, next) => {
         .catch(http_error_500);
 });
 
-
-router.patch("/:supplierId", (req, res, next) => {
-    const id = req.params.supplierId;
+router.patch("/:customerId", (req, res, next) => {
+    const id = req.params.customerId;
     const updateOps = {};
     for (const ops of req.body) {
         updateOps[ops.propName] = ops.value;
     }
-    Supplier.update({ _id: id }, { $set: updateOps })
+    Customer.update({ _id: id }, { $set: updateOps })
         .exec()
         .then(result => {
             res.status(200).json({
-                message: 'supplier updated',
+                message: 'customer updated',
             });
         })
         .catch(http_error_500);
 });
 
-
-router.delete("/:supplierId", (req, res, next) => {
-    const id = req.params.supplierId;
-    Supplier.remove({ _id: id })
+router.delete("/:customerId", (req, res, next) => {
+    const id = req.params.customerId;
+    Customer.remove({ _id: id })
         .exec()
         .then(result => {
             res.status(200).json({
-                message: 'Supplier deleted',
+                message: 'Customer deleted',
             });
         })
         .catch(http_error_500);
