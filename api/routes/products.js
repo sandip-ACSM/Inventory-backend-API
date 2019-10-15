@@ -11,33 +11,41 @@ var http_error_500 = err => {
     });
 }
 
-var price_filter = (query_str_price, Product) => {
-    var price = JSON.parse(query_str_price)
-    if (price.lt && price.gt){
-        product_res = Product.find({price: {$lt: price.lt, $gt: price.gt}})
-    } else if (price.lt && price.gte){
-        product_res = Product.find({price: {$lt: price.lt, $gte: price.gte}})
-    } else if (price.lte && price.gt){
-        product_res = Product.find({price: {$lte: price.lte, $gt: price.gt}})
-    } else if (price.lte && price.gte){
-        product_res = Product.find({price: {$lte: price.lte, $gte: price.gte}})
+var addElement_obj = (query_obj, query_str_key, query_str_value) => {
+    if (query_str_value) {
+        query_obj[query_str_key] = query_str_value
+    } 
+    return query_obj
+}
+
+var addFilteredElement_obj = (query_obj, query_str_key, query_str_value) => {
+    if (query_str_value) {
+        var entity = JSON.parse(query_str_value)
+        if (entity.lt && entity.gt){
+            query_obj[query_str_key] = {$lt: entity.lt, $gt: entity.gt}
+        } else if (entity.lt && entity.gte){
+            query_obj[query_str_key] = {$lt: entity.lt, $gte: entity.gte}
+        } else if (entity.lte && entity.gt){
+            query_obj[query_str_key] = {$lte: entity.lte, $gt: entity.gt}
+        } else if (entity.lte && entity.gte){
+            query_obj[query_str_key] = {$lte: entity.lte, $gte: entity.gte}
+        }
     }
-    return product_res
+    return query_obj
 }
 
 router.get("/", (req, res, next) => {
-    query_key_list = Object.keys(req.query)
-    var product_res = undefined;
-
-    if (query_key_list.length === 0){
-        product_res = Product.find()
+    if (Object.keys(req.query).length === 0){
+        var product_res = Product.find()
     } else {
-        if (req.query.name) {
-            product_res = Product.find({name: req.query.name})
-        }
-        if (req.query.price) {
-            product_res = price_filter(req.query.price, Product)
-        }
+        var query_obj = {}
+        query_obj = addElement_obj(query_obj, 'product_code', req.query.product_code)
+        query_obj = addElement_obj(query_obj, 'name', req.query.name)
+        query_obj = addElement_obj(query_obj, 'category', req.query.category)
+        query_obj = addElement_obj(query_obj, 'supplier', req.query.supplier)
+        query_obj = addFilteredElement_obj(query_obj, 'u_buy', req.query.u_buy)
+        query_obj = addFilteredElement_obj(query_obj, 'u_sell', req.query.u_sell)
+        var product_res = Product.find(query_obj)
     }
     product_res
         .exec()
@@ -46,9 +54,15 @@ router.get("/", (req, res, next) => {
                 count: docs.length,
                 products: docs.map(doc => {
                     return {
-                        name: doc.name,
-                        price: doc.price,
                         _id: doc._id,
+                        product_code: doc.product_code,
+                        name: doc.name,
+                        category: doc.category,
+                        description: doc.description,
+                        supplier: doc.supplier,
+                        u_sell: doc.u_sell,
+                        u_buy: doc.u_buy,
+                        u_measure: doc.u_measure,
                     };
                 })
             };
@@ -59,77 +73,81 @@ router.get("/", (req, res, next) => {
 
 
 router.post("/", (req, res, next) => {
-  const product = new Product({
-    _id: new mongoose.Types.ObjectId(),
-    name: req.body.name,
-    price: req.body.price
-  });
-  product
-    .save()
-    .then(result => {
-      console.log(result);
-      res.status(201).json({
-        message: "Created product successfully",
-        createdProduct: {
-            name: result.name,
-            price: result.price,
-            _id: result._id,
-        }
-      });
-    })
-    .catch(http_error_500);
+    const product = new Product({
+        _id: new mongoose.Types.ObjectId(),
+        product_code: doc.product_code,
+        name: doc.name,
+        category: doc.category,
+        description: doc.description,
+        supplier: doc.supplier,
+        u_sell: doc.u_sell,
+        u_buy: doc.u_buy,
+        u_measure: doc.u_measure,
+    });
+    product
+        .save()
+        .then(result => {
+            console.log(result);
+            res.status(201).json({
+                message: "Created product successfully",
+                createdProduct: {
+                    name: result.name,
+                    price: result.price,
+                    _id: result._id,
+                }
+            });
+        })
+        .catch(http_error_500);
 });
 
 
 router.get("/:productId", (req, res, next) => {
-  const id = req.params.productId;
-  Product.findById(id)
-//   Product.find({ name: req.params.productId})
-    .select('name price _id')
-    .exec()
-    .then(doc => {
-      console.log("From database", doc);
-      if (doc) {
-        res.status(200).json({
-            product: doc,
-        });
-      } else {
-        res.status(404).json({ 
-          message: "No valid entry found for provided ID" 
-        });
-      }
-    })
-    .catch(http_error_500);
+    const id = req.params.productId;
+    Product.findById(id)
+        .exec()
+        .then(doc => {
+            console.log("From database", doc);
+            if (doc) {
+                res.status(200).json({
+                    product: doc,
+                });
+            } else {
+                res.status(404).json({ 
+                message: "No valid entry found for provided ID" 
+                });
+            }
+        })
+        .catch(http_error_500);
 });
 
 
 router.patch("/:productId", (req, res, next) => {
-  const id = req.params.productId;
-  const updateOps = {};
-  for (const ops of req.body) {
-    updateOps[ops.propName] = ops.value;
-  }
-  Product.update({ _id: id }, { $set: updateOps })
-    .exec()
-    .then(result => {
-      res.status(200).json({
-          message: 'Product updated',
-      });
-    })
-    .catch(http_error_500);
+    const id = req.params.productId;
+    const updateOps = {};
+    for (const ops of req.body) {
+        updateOps[ops.propName] = ops.value;
+    }
+    Product.update({ _id: id }, { $set: updateOps })
+        .exec()
+        .then(result => {
+            res.status(200).json({
+                message: 'Product updated',
+            });
+        })
+        .catch(http_error_500);
 });
 
 
 router.delete("/:productId", (req, res, next) => {
-  const id = req.params.productId;
-  Product.remove({ _id: id })
-    .exec()
-    .then(result => {
-      res.status(200).json({
-          message: 'Product deleted',
-      });
-    })
-    .catch(http_error_500);
+    const id = req.params.productId;
+    Product.remove({ _id: id })
+        .exec()
+        .then(result => {
+            res.status(200).json({
+                message: 'Product deleted',
+            });
+        })
+        .catch(http_error_500);
 });
 
 module.exports = router;
