@@ -22,7 +22,7 @@ var addElement_obj = (query_obj, query_str_key, query_str_value) => {
     } 
     return query_obj
 }
-
+//Endpoint example: /products?u_sell={"lt": 150, "gt": 30}
 var addFilteredElement_obj = (query_obj, query_str_key, query_str_value) => {
     if (query_str_value) {
         var entity = JSON.parse(query_str_value)

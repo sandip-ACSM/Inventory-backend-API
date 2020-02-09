@@ -12,4 +12,4 @@ const productSchema = mongoose.Schema({
     u_measure: { type: String }
 });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model('product', productSchema);
